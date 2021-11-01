@@ -5,6 +5,7 @@
 #include <iterator>
 #include <tuple>
 #include <algorithm>
+#include <memory>
 
 #include "graphedge.h"
 #include "graphnode.h"
@@ -36,16 +37,16 @@ ChatLogic::~ChatLogic()
     delete _chatBot;
 
     // delete all nodes
-    for (auto it = std::begin(_nodes); it != std::end(_nodes); ++it)
+    /*for (auto it = std::begin(_nodes); it != std::end(_nodes); ++it)
     {
         delete *it;
-    }
+    }*/
 
     // delete all edges
-    for (auto it = std::begin(_edges); it != std::end(_edges); ++it)
+    /*for (auto it = std::begin(_edges); it != std::end(_edges); ++it)
     {
         delete *it;
-    }
+    }*/
 
     ////
     //// EOF STUDENT CODE
@@ -123,12 +124,12 @@ void ChatLogic::LoadAnswerGraphFromFile(std::string filename)
                     // node-based processing
                     if (type->second == "NODE")
                     {
-                        //// STUDENT CODE
-                        ////
+                        //// STUDENT CODE       // TASK 3 - Exclusive Ownership
+                        ////    
 
                         // check if node with this ID exists already
-                        auto newNode = std::find_if(_nodes.begin(), _nodes.end(), [&id](GraphNode *node) { return node->GetID() == id; });
-
+                        //auto newNode = std::find_if(_nodes.begin(), _nodes.end(), [&id](GraphNode *node) { return node->GetID() == id; });
+                        auto newNode = std::find_if(_nodes.begin(), _nodes.end(), [&id](std::unique_ptr<GraphNode>p) { return p.get()->GetID() == id; });
                         // create new element if ID does not yet exist
                         if (newNode == _nodes.end())
                         {
@@ -146,7 +147,7 @@ void ChatLogic::LoadAnswerGraphFromFile(std::string filename)
                     // edge-based processing
                     if (type->second == "EDGE")
                     {
-                        //// STUDENT CODE
+                        //// STUDENT CODE      // TASK 3 - Exclusive Ownership         
                         ////
 
                         // find tokens for incoming (parent) and outgoing (child) node
@@ -160,17 +161,24 @@ void ChatLogic::LoadAnswerGraphFromFile(std::string filename)
                             auto childNode = std::find_if(_nodes.begin(), _nodes.end(), [&childToken](GraphNode *node) { return node->GetID() == std::stoi(childToken->second); });
 
                             // create new edge
-                            GraphEdge *edge = new GraphEdge(id);
-                            edge->SetChildNode(*childNode);
-                            edge->SetParentNode(*parentNode);
+
+                            //GraphEdge *edge = new GraphEdge(id);
+                            std::unique_ptr<GraphEdge>edge{new GraphEdge(id)};
+                            edge->SetChildNode((*childNode).get());
+                            //edge->SetChildNode(*childNode);
+                            
+                            //edge->SetParentNode(*parentNode);
+                            edge->SetParentNode((*parentNode).get());
                             _edges.push_back(edge);
 
                             // find all keywords for current node
                             AddAllTokensToElement("KEYWORD", tokens, *edge);
 
                             // store reference in child node and parent node
-                            (*childNode)->AddEdgeToParentNode(edge);
-                            (*parentNode)->AddEdgeToChildNode(edge);
+                            //(*childNode)->AddEdgeToParentNode(edge);
+                            //(*parentNode)->AddEdgeToChildNode(edge);
+                            (*childNode).get()->AddEdgeToParentNode(edge.get());
+                            (*parentNode).get()->AddEdgeToChildNode(std::move(edge));
                         }
 
                         ////
@@ -193,7 +201,7 @@ void ChatLogic::LoadAnswerGraphFromFile(std::string filename)
         return;
     }
 
-    //// STUDENT CODE
+    //// STUDENT CODE           // TASK 3 - Exclusive Ownership     
     ////
 
     // identify root node
@@ -206,7 +214,7 @@ void ChatLogic::LoadAnswerGraphFromFile(std::string filename)
 
             if (rootNode == nullptr)
             {
-                rootNode = *it; // assign current node to root
+                rootNode = (*it).get(); // assign current node to root
             }
             else
             {

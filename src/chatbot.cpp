@@ -2,11 +2,15 @@
 #include <random>
 #include <algorithm>
 #include <ctime>
+#include <iostream>
 
 #include "chatlogic.h"
 #include "graphnode.h"
 #include "graphedge.h"
 #include "chatbot.h"
+
+using std::cout;
+using std::endl;
 
 // constructor WITHOUT memory allocation
 ChatBot::ChatBot()
@@ -42,8 +46,62 @@ ChatBot::~ChatBot()
     }
 }
 
-//// STUDENT CODE
+//// STUDENT CODE           TASK 2 - Implementation of Rule of Five
 ////
+
+ChatBot::ChatBot(const ChatBot&source){                     //Copy Constructor
+    cout<< "ChatBot Copy Constructor" << "\n";
+    _currentNode=source._currentNode;
+    _chatLogic=source._chatLogic;
+    //_chatLogic->SetChatbotHandle(this);
+    _rootNode=source._rootNode;
+    _image=new wxBitmap();
+    *_image=*source._image;
+}
+
+ChatBot&ChatBot::operator=(const ChatBot &source){          //Copy Assignment Operator
+    cout<<"ChatBot (Assign) instance"<< "\n";
+    _currentNode=source._currentNode;
+    _chatLogic=source._chatLogic;
+    //_chatLogic->SetChatbotHandle(this);
+    _rootNode=source._rootNode;
+    if(&source==this)
+        return *this;
+    delete[]_image;
+    _image=new wxBitmap();
+    *_image=*source._image;
+    return *this;
+}
+
+ChatBot::ChatBot(ChatBot&&source){                          //Move Constructor
+    cout<< "ChatBot Move Constructor"<< "\n";
+    _image=source._image;
+    _currentNode=source._currentNode;
+    _rootNode=source._rootNode;
+    _chatLogic=source._chatLogic;
+    //_chatLogic->SetChatbotHandle(this);
+    source._image=NULL;
+    source._currentNode=nullptr;
+    source._rootNode=nullptr;
+    source._chatLogic=nullptr;
+}
+
+ChatBot&ChatBot::operator=(ChatBot&&source){
+    cout<< "ChatBot Moving (Assign) instance "<< "\n";
+    if(this==&source)
+        return *this;
+    delete[]_image;
+    _image=source._image;
+    _currentNode=source._currentNode;
+    _rootNode=source._rootNode;
+    _chatLogic=source._chatLogic;
+    //_chatLogic->SetChatbotHandle(this);
+    source._image=NULL;
+    source._currentNode=nullptr;
+    source._rootNode=nullptr;
+    source._chatLogic=nullptr;
+    return *this;
+}
 
 ////
 //// EOF STUDENT CODE
